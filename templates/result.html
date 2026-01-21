@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>OCR Result</title>
+    <link rel="stylesheet" href="/static/app.css" />
+  </head>
+  <body>
+    <main class="shell wide">
+      <header class="header">
+        <div>
+          <h1>Result</h1>
+          <p class="muted">
+            <strong>File:</strong> {{ filename }} · <strong>Pages:</strong> {{ pages_count }}
+          </p>
+        </div>
+        <a class="btn" href="/">New upload</a>
+      </header>
+
+      <section class="split">
+        <div class="card pane">
+          <div class="pane-head"><h2>Original</h2></div>
+          {% if original_view.type == "pdf" %}
+            <embed class="preview" src="{{ original_view.src }}" type="application/pdf" />
+          {% elif original_view.type == "img" %}
+            <img class="preview-img" src="{{ original_view.src }}" alt="Original" />
+          {% else %}
+            <div class="muted">Preview not available for this format.</div>
+          {% endif %}
+        </div>
+
+        <div class="card pane">
+          <div class="pane-head">
+            <h2>Markdown</h2>
+            <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('md').value)">Copy</button>
+          </div>
+          <textarea id="md" class="textarea" readonly>{{ combined_md }}</textarea>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

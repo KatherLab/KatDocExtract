@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>DeepSeek-OCR</title>
+    <link rel="stylesheet" href="/static/app.css" />
+    <script defer src="/static/app.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="header">
+        <div>
+          <h1>DeepSeek-OCR</h1>
+          <p class="muted">Upload a document and get markdown back.</p>
+        </div>
+      </header>
+
+      <section class="card">
+        <form class="form" method="post" enctype="multipart/form-data">
+          <div class="dropzone" id="dropzone">
+            <input
+              class="file"
+              type="file"
+              name="file"
+              id="file"
+              accept=".pdf,.doc,.docx,.ppt,.pptx,image/*"
+              required
+            />
+            <div class="dz-ui">
+              <div class="dz-title">Drop a file here</div>
+              <div class="dz-sub muted">or click to browse</div>
+              <div class="dz-filename" id="dzFilename"></div>
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="btn primary" type="submit">Run</button>
+            <label class="toggle">
+              <input type="checkbox" name="advanced" id="advanced" value="true" />
+              <span>Advanced</span>
+            </label>
+          </div>
+
+          <div class="advanced" id="advancedPanel" hidden>
+            <div class="grid">
+              <label class="check">
+                <input type="checkbox" name="inline_figure_text" value="true" checked />
+                <span>Replace figures with text</span>
+              </label>
+
+              <label>
+                <span class="lbl">PDF mode</span>
+                <select name="pdf_mode">
+                  <option value="auto">auto (text-layer if present)</option>
+                  <option value="text">text-layer only</option>
+                  <option value="ocr">OCR raster only</option>
+                </select>
+              </label>
+
+              <label class="check">
+                <input type="checkbox" name="include_image_base64" value="true" />
+                <span>Include image base64</span>
+              </label>
+
+              <label class="check">
+                <input type="checkbox" name="extract_header" value="true" />
+                <span>Extract header</span>
+              </label>
+
+              <label class="check">
+                <input type="checkbox" name="extract_footer" value="true" />
+                <span>Extract footer</span>
+              </label>
+
+              <label>
+                <span class="lbl">Table format</span>
+                <select name="table_format">
+                  <option value="">Inline (default)</option>
+                  <option value="markdown">Extract as markdown</option>
+                  <option value="html">Extract as html</option>
+                </select>
+              </label>
+
+              <label>
+                <span class="lbl">Min figure size (px)</span>
+                <input type="number" name="image_min_size" min="0" placeholder="e.g. 80" />
+              </label>
+
+              <label>
+                <span class="lbl">Figure limit</span>
+                <input type="number" name="image_limit" min="0" placeholder="e.g. 10" />
+              </label>
+
+              <label style="grid-column: 1 / -1;">
+                <span class="lbl">Figure prompt (optional)</span>
+                <input type="text" name="figure_prompt" placeholder="Leave empty for default" />
+              </label>
+            </div>
+
+            <p class="muted tiny">Default is simple upload. Advanced is only if needed.</p>
+          </div>
+
+          <p class="muted tiny">
+            API: <code>POST /v1/ocr</code>
+          </p>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

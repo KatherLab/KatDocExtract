@@ -1,0 +1,17 @@
+[project]
+name = "KatDocExtract"
+version = "0.2.0"
+description = "High-performance async OCR pipeline using DeepSeek-VL and PyMuPDF."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.128.0",
+    "uvicorn[standard]>=0.40.0",
+    "openai>=2.15.0",     # Used for the async vLLM client
+    "pymupdf>=1.26.7",    # Replaces pdf2image/poppler
+    "pillow>=12.1.0",
+    "python-multipart>=0.0.21",
+    "requests>=2.32.5",
+    "jinja2>=3.1.6",
+    "python-dotenv>=1.2.1",
+]
