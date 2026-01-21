@@ -1,5 +1,7 @@
 # KatDocExtract (Mistral-compatible Document OCR Wrapper using DeepSeek-OCR)
 
+![Side-by-side comparison of PDF vs DeepSeek-OCR markdown extraction](static/result.png)
+
 A **Mistral-API compatible** document parsing server that converts PDFs, images, and Office documents into clean, formatted **Markdown** using **DeepSeek-OCR**.
 
 This project is designed as a *drop-in OCR replacement* for LLM pipelines (RAG, chatbots, Open WebUI, etc.) that need high-quality extraction from complex documents.
