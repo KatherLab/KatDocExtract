@@ -1,0 +1,53 @@
+services:
+  vllm:
+    image: vllm/vllm-openai:latest
+    env_file:
+      - .env
+    environment:
+      TRITON_PTXAS_PATH: /usr/local/cuda/bin/ptxas
+    ipc: host
+    shm_size: "8gb"
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    command: >
+      --model ${VLLM_MODEL:-deepseek-ai/DeepSeek-OCR}
+      --logits_processors vllm.model_executor.models.deepseek_ocr:NGramPerReqLogitsProcessor
+      --no-enable-prefix-caching
+      --mm-processor-cache-gb 0
+      --host 0.0.0.0
+      --port 8000
+      --gpu-memory-utilization=0.15
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"] 
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  ocr-api:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "3001:8001"
+    depends_on:
+      vllm:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./files_store:/data/files_store
+    environment:
+      # Ensure the wrapper talks to the vLLM service inside the compose network.
+      # (Override whatever is in .env for local/dev if needed.)
+      VLLM_BASE_URL: http://vllm:8000/v1
+
+      # Ensure file storage path matches the bind mount above.
+      FILES_DIR: /data/files_store

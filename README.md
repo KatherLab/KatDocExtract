@@ -6,8 +6,8 @@ A **Mistral-API compatible** document parsing server that converts PDFs, images,
 
 This project is designed as a *drop-in OCR replacement* for LLM pipelines (RAG, chatbots, Open WebUI, etc.) that need high-quality extraction from complex documents.
 
-> **Important:** This repository does **not** ship the model runtime. You must run your **own vLLM instance** serving `deepseek-ai/DeepSeek-OCR` (OpenAI-compatible API).  
-> Follow the vLLM recipe here: `https://docs.vllm.ai/projects/recipes/en/latest/DeepSeek/DeepSeek-OCR.html`
+> **Important:** This repository does **not** ship the model runtime. The **Docker Compose setup includes a vLLM container**, but you can also point the wrapper at an external vLLM instance if you already run one.  
+> vLLM recipe (DeepSeek-OCR): `https://docs.vllm.ai/projects/recipes/en/latest/DeepSeek/DeepSeek-OCR.html`
 
 ---
 
@@ -33,7 +33,7 @@ This project is designed as a *drop-in OCR replacement* for LLM pipelines (RAG, 
 
 ## How it works (Architecture)
 
-1. You run **vLLM** with `deepseek-ai/DeepSeek-OCR` (OpenAI-compatible `/v1` endpoint).
+1. **vLLM** serves `deepseek-ai/DeepSeek-OCR` as an OpenAI-compatible `/v1` endpoint.
 2. This server accepts documents and:
    - For PDFs: decides per page whether to use text-layer extraction or Vision OCR fallback.
    - For figures: crops and re-queries the model for figure descriptions (optional).
@@ -43,29 +43,104 @@ This project is designed as a *drop-in OCR replacement* for LLM pipelines (RAG, 
 
 ## Prerequisites
 
+### Recommended (Docker Compose)
+
+- Docker + Docker Compose
+- NVIDIA GPU + drivers (strongly recommended for vLLM)
+
+### Manual (no Docker)
+
 - Python 3.13+ recommended
 - `uv` (recommended) or pip/venv
-- A running **vLLM** server hosting `deepseek-ai/DeepSeek-OCR` (GPU strongly recommended)
 - Optional but recommended:
   - **LibreOffice** (`soffice`) for Office docs (`.doc/.docx/.ppt/.pptx/.odt/.odp`)
 - System libs:
   - Uses **PyMuPDF** (`fitz`) for PDF rendering
 
+> Note: The provided `Dockerfile` already includes LibreOffice and common fonts.
+
 ---
 
-## 1) Run your own vLLM backend (required)
+## Installation
+
+There are two ways to run this:
+
+- **Recommended:** Docker Compose (**includes vLLM + the wrapper**)
+- **Manual:** run vLLM + the API yourself (useful for dev or existing infra)
+
+---
+
+## Option A: Docker Compose (recommended)
+
+This starts both services:
+
+- `vllm` (OpenAI-compatible `/v1` endpoint serving `deepseek-ai/DeepSeek-OCR`)
+- `ocr-api` (this wrapper, exposed on **http://localhost:3001**)
+
+### 1) Configure
+
+Copy and edit the environment file:
+
+```bash
+cp .env.example .env
+# Edit .env (optionally set VLLM_MODEL, CONCURRENT_REQUEST_LIMIT, heuristic knobs, etc.)
+````
+
+Notes:
+
+* The wrapper talks to vLLM inside the Compose network. `docker-compose.yml` sets:
+
+  * `VLLM_BASE_URL=http://vllm:8000/v1`
+* Hugging Face cache is persisted:
+
+  * `~/.cache/huggingface:/root/.cache/huggingface`
+* File storage is persisted:
+
+  * `./files_store:/data/files_store`
+
+### 2) Start the stack
+
+```bash
+docker compose up -d --build
+```
+
+### 3) Open the Web UI
+
+* `http://localhost:3001`
+
+### Useful commands
+
+View logs:
+
+```bash
+docker compose logs -f
+```
+
+Stop:
+
+```bash
+docker compose down
+```
+
+---
+
+## Option B: Manual setup (no Docker)
+
+Use this if you already run vLLM elsewhere, want to develop locally, or prefer a venv-based workflow.
+
+### 1) Run your own vLLM backend (required)
 
 This wrapper expects an OpenAI-compatible server at `VLLM_BASE_URL` (defaults to `http://localhost:8000/v1`).
 
-### Install vLLM
+#### Install vLLM
 
 ```bash
 uv venv
 source .venv/bin/activate
 uv pip install -U vllm --torch-backend auto
-````
+```
 
-### Serve DeepSeek-OCR (OpenAI-compatible)
+#### Serve DeepSeek-OCR (OpenAI-compatible)
 
 ```bash
 vllm serve deepseek-ai/DeepSeek-OCR \
@@ -81,17 +156,17 @@ vllm serve deepseek-ai/DeepSeek-OCR \
 
 ---
 
-## 2) Install and run KatDocExtract
+### 2) Install and run KatDocExtract
 
 We recommend using **uv**.
 
-### Install
+#### Install
 
 ```bash
 uv sync
 ```
 
-### Configure
+#### Configure
 
 Copy and edit the environment file:
 
@@ -106,15 +181,15 @@ cp .env.example .env
 * `VLLM_MODEL` – model name (default `deepseek-ai/DeepSeek-OCR`)
 * `CONCURRENT_REQUEST_LIMIT` – max concurrent requests to vLLM (tune for GPU memory)
 
-### Run
+#### Run
 
 ```bash
-uv run uvicorn app:app --host 0.0.0.0 --port 8005 --reload
+uv run uvicorn app:app --host 0.0.0.0 --port 8001 --reload
 ```
 
 Open the Web UI:
 
-* `http://localhost:8005`
+* `http://localhost:8001`
 
 ---
 
@@ -127,7 +202,7 @@ This is the main endpoint. It accepts a `document` object plus optional parsing 
 **Minimal example (remote PDF URL):**
 
 ```bash
-curl -X POST "http://localhost:8005/v1/ocr" \
+curl -X POST "http://localhost:3001/v1/ocr" \
   -H "Content-Type: application/json" \
   -d '{
     "document": {
@@ -142,7 +217,7 @@ curl -X POST "http://localhost:8005/v1/ocr" \
 **Minimal example (remote image URL):**
 
 ```bash
-curl -X POST "http://localhost:8005/v1/ocr" \
+curl -X POST "http://localhost:3001/v1/ocr" \
   -H "Content-Type: application/json" \
   -d '{
     "document": {
@@ -197,7 +272,9 @@ Useful request fields:
 
 Office formats are supported by converting them to PDF using **LibreOffice**.
 
-Install LibreOffice (example for Debian/Ubuntu):
+If you use Docker, LibreOffice is already included in the image.
+
+Manual install example for Debian/Ubuntu:
 
 ```bash
 sudo apt-get update && sudo apt-get install -y libreoffice
@@ -260,4 +337,3 @@ Higher `PDF_TEXT_RENDER_DPI` improves OCR quality but increases:
 ## License
 
 TBD
-

@@ -1,5 +1,7 @@
 __pychache__/*
 *.pyc
 
+.cache
+
 .env
 files_store
