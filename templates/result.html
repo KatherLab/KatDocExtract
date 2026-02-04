@@ -33,11 +33,65 @@
         <div class="card pane">
           <div class="pane-head">
             <h2>Markdown</h2>
-            <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('md').value)">Copy</button>
+            <button class="btn" id="copyBtn">Copy</button>
           </div>
           <textarea id="md" class="textarea" readonly>{{ combined_md }}</textarea>
         </div>
       </section>
     </main>
+
+    <script>
+      (function () {
+        const copyBtn = document.getElementById("copyBtn");
+        const textarea = document.getElementById("md");
+
+        copyBtn.addEventListener("click", async function () {
+          const text = textarea.value;
+          let success = false;
+          let errorMsg = "";
+
+          // Try modern clipboard API first (works on https or localhost)
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+              await navigator.clipboard.writeText(text);
+              success = true;
+            } catch (err) {
+              errorMsg = err.message;
+            }
+          }
+
+          // Fallback: use execCommand (works on non-secure contexts like HTTP local network)
+          if (!success) {
+            textarea.select();
+            textarea.setSelectionRange(0, 999999); // For mobile devices
+            try {
+              success = document.execCommand("copy");
+              if (!success) errorMsg = "execCommand failed";
+            } catch (err) {
+              errorMsg = err.message;
+            }
+            textarea.setSelectionRange(0, 0); // Deselect
+          }
+
+          // Show feedback
+          const originalText = copyBtn.textContent;
+          if (success) {
+            copyBtn.textContent = "Copied!";
+            copyBtn.style.background = "#22c55e";
+            copyBtn.style.borderColor = "#22c55e";
+          } else {
+            copyBtn.textContent = "Failed!";
+            copyBtn.style.background = "#ef4444";
+            copyBtn.style.borderColor = "#ef4444";
+          }
+
+          setTimeout(() => {
+            copyBtn.textContent = originalText;
+            copyBtn.style.background = "";
+            copyBtn.style.borderColor = "";
+          }, 2000);
+        });
+      })();
+    </script>
   </body>
 </html>
