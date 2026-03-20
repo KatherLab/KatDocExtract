@@ -10,13 +10,13 @@ services:
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
     command: >
-      --model ${VLLM_MODEL:-deepseek-ai/DeepSeek-OCR}
+      --model ${VLLM_MODEL:-deepseek-ai/DeepSeek-OCR-2}
       --logits_processors vllm.model_executor.models.deepseek_ocr:NGramPerReqLogitsProcessor
       --no-enable-prefix-caching
       --mm-processor-cache-gb 0
       --host 0.0.0.0
       --port 8000
-      --gpu-memory-utilization=0.15
+      --gpu-memory-utilization=0.8
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"] 
       interval: 30s
@@ -37,7 +37,7 @@ services:
     env_file:
       - .env
     ports:
-      - "3001:8001"
+      - "3006:8001"
     depends_on:
       vllm:
         condition: service_healthy
