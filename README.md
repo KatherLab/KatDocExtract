@@ -88,7 +88,7 @@ cp .env.example .env
 
 Notes:
 
-* The wrapper talks to vLLM inside the Compose network. `docker-compose.yml` sets:
+* The wrapper talks to vLLM inside the Compose network. `compose.yml` sets:
 
   * `VLLM_BASE_URL=http://vllm:8000/v1`
 * Hugging Face cache is persisted:

@@ -1,7 +1,25 @@
-__pychache__/*
-*.pyc
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg
 
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
 .cache
 
-.env
-files_store
+# Application
+files_store/

@@ -33,6 +33,7 @@ services:
               capabilities: [gpu]
 
   ocr-api:
+    image: ghcr.io/katherlab/katdocextract:latest
     build: .
     env_file:
       - .env

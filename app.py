@@ -11,6 +11,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+import tomllib
+
 from config import get_settings
 from document_io import get_document_bytes_mime_ext, load_document_as_images
 from files_api import router as files_router
@@ -27,6 +29,13 @@ app.include_router(files_router)
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+# Read app version from pyproject.toml
+_pyproject = tomllib.loads((BASE_DIR / "pyproject.toml").read_text())
+APP_VERSION = _pyproject["project"]["version"]
+
+# Expose version in all templates
+templates.env.globals["app_version"] = APP_VERSION
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 _FILE_CONTENT_URL_RE = re.compile(r"/v1/files/([0-9a-fA-F-]{36})/content")
