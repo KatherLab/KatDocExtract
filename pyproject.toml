@@ -5,7 +5,7 @@ description = "High-performance async OCR pipeline using DeepSeek-VL and PyMuPDF
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "fastapi==0.136.1",
+    "fastapi==0.136.3",
     "uvicorn[standard]==0.47.0",
     "openai==2.37.0",     # Used for the async vLLM client
     "pymupdf==1.27.2.3",    # Replaces pdf2image/poppler
